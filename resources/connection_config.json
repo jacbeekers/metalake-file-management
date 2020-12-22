@@ -2,5 +2,6 @@
   "schema": "connection_config",
   "schema_version": "0.1.0",
   "azure_secrets": "resources/connection.secrets",
-  "suppress_azure_calls": "False"
+  "suppress_azure_calls": "False",
+  "file_locations": "resources/locations.json"
 }

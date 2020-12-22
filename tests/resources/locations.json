@@ -1,0 +1,8 @@
+{
+  "incoming": "incoming",
+  "todo": "todo",
+  "busy": "busy",
+  "done": "done",
+  "redo": "redo",
+  "hist": "hist"
+}

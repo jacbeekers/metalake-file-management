@@ -18,7 +18,7 @@ pip3 install keyring
 echo "building"
 echo "=-=-=--=-==---=-=-=-=---=-=-=-=-=-=-=-"
 rm -rf dist/*
-python3 src/setup.py sdist bdist_wheel
+python3 setup.py sdist bdist_wheel
 rc=$?
 if [ $rc -eq 0 ] ; then
    echo "Uploading to test.pypi.org..."
