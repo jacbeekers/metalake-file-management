@@ -1,0 +1,8 @@
+# for development and test only
+# for install check install_requires in setup.py
+-e .
+
+# unit tests
+pytest
+pytest-cov
+pytest-xdist
