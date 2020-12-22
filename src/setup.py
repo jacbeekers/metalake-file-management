@@ -32,14 +32,14 @@ with open(version_file, 'rb') as f:
                     t.write(out_line.encode('utf-8'))
 
 setuptools.setup(
-    name='metalake-adls-management',
+    name='metalake-file-management',
     version=new_version,
     author='Jac. Beekers',
     author_email='beekersjac@gmail.com',
-    description="Utilities to manage incoming metadata files",
+    description="metadata lake file management",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='',
+    url='https://github.com/jacbeekers/metalake-file-management',
     packages=setuptools.find_packages(),
     install_requires=[
         'jsonschema',
