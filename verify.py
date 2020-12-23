@@ -37,7 +37,7 @@ def verify_copy_files(configuration_file="resources/connection_config.json"):
     print("5. verify the two directories contain the same files (the one that was uploaded)")
     print("=== Executing verification ===")
     handler = interface_file_handling.InterfaceFileHandling(
-        configuration_file="tests/resources/connection_config.json")
+        configuration_file="resources/connection_config.json")
     mgmt = folder_management.ADLSFolderManagement(configuration_file)
     print("1. create two verification directories")
     print("\tsource_folder: " + source_folder)
