@@ -12,6 +12,7 @@ echo "Uploading to pypi.org..."
 python3 -m twine upload --sign dist/*
 rc=$?
 if [ $rc -eq 0 ] ; then
+   mkdir -p plugins
    echo "Updating version number for git..."
    if [ -f temp/_tmp_version.tmp ] ; then
       cp -p temp/_tmp_version.tmp plugins/__init__.py
