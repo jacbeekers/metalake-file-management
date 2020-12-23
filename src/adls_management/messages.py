@@ -74,6 +74,18 @@ message = {
         , "level": "ERROR"
         , "reference": "None"
     },
+    "check_files_difference_found": {
+        "code": "MLU-FH-004"
+        , "message": "Differences found"
+        , "level": "ERROR"
+        , "reference": "None"
+    },
+    "resource_not_found": {
+        "code": "MLU-FH-005"
+        , "message": "Resource could not be found"
+        , "level": "ERROR"
+        , "reference": "None"
+    },
     #
     # Security related messages
     #

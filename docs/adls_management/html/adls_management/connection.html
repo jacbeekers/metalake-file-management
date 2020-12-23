@@ -31,8 +31,9 @@ from azure.storage.filedatalake import DataLakeServiceClient
 from azure.core._match_conditions import MatchConditions
 from azure.storage.filedatalake._models import ContentSettings
 from src.utils import settings
-from azure.storage.blob import BlobServiceClient
-
+from azure.storage.blob import BlobClient, BlobServiceClient, generate_account_sas
+from azure.storage.blob import ResourceTypes, AccountSasPermissions
+from datetime import datetime, timedelta
 
 class ConnectionManagement:
 
@@ -41,6 +42,8 @@ class ConnectionManagement:
         self.file_system_client = None
         self.settings = settings
         self.blob_service_client = None
+        self.container_client = None
+        self.sas_token = None
 
     def create_connection(self, storage_account_name, storage_account_key, container):
         try:
@@ -48,7 +51,6 @@ class ConnectionManagement:
             blob_url=&#34;{}://{}.blob.core.windows.net/&#34;.format(&#34;https&#34;, storage_account_name)
             print(&#34;ADLS URL:&#34;, dfs_url)
             print(&#34;Blob URL:&#34;, blob_url)
-            # not secure: print(&#34;account key:&#34;, storage_account_key)
             print(&#34;Getting service_client...&#34;)
             self.service_client = DataLakeServiceClient(account_url=dfs_url, credential=storage_account_key)
             print(&#34;Getting file_system_client...&#34;)
@@ -56,13 +58,27 @@ class ConnectionManagement:
                 file_system=self.settings.storage_container
             )
             print(&#34;Getting blob_service_client...&#34;)
-            connect_string=&#34;DefaultEndpointsProtocol=https;AccountName=&#34; + storage_account_name + &#34;AccountKey=&#34;\
+            connect_string=&#34;DefaultEndpointsProtocol=https;AccountName=&#34; + storage_account_name + &#34;;AccountKey=&#34;\
                            + storage_account_key + &#34;;EndpointSuffix=core.windows.net&#34;
             self.blob_service_client = BlobServiceClient.from_connection_string(
-                    conn_str=connect_string
-                ).get_container_client(container)
+                    conn_str=connect_string)
+            # Create sas token for blob
+
+            self.sas_token = generate_account_sas(
+                account_name=self.blob_service_client.account_name,
+                account_key=storage_account_key,
+                resource_types = ResourceTypes(service=True, object=True, container=True),
+                permission = AccountSasPermissions(read=True, write=True, delete=True, list=True, add=True, create=True),
+                start = datetime.now() - timedelta(hours=1),
+                expiry = datetime.utcnow() + timedelta(hours=4)  # Token valid for 4 hours
+            )
+            self.container_client = self.blob_service_client.get_container_client(container)
             print(&#34;returning references.&#34;)
-            return self.service_client, self.file_system_client, self.blob_service_client
+            return self.service_client\
+                , self.file_system_client\
+                , self.blob_service_client\
+                , self.container_client\
+                , self.sas_token
 
         except Exception as e:
             print(e)
@@ -95,6 +111,8 @@ class ConnectionManagement:
         self.file_system_client = None
         self.settings = settings
         self.blob_service_client = None
+        self.container_client = None
+        self.sas_token = None
 
     def create_connection(self, storage_account_name, storage_account_key, container):
         try:
@@ -102,7 +120,6 @@ class ConnectionManagement:
             blob_url=&#34;{}://{}.blob.core.windows.net/&#34;.format(&#34;https&#34;, storage_account_name)
             print(&#34;ADLS URL:&#34;, dfs_url)
             print(&#34;Blob URL:&#34;, blob_url)
-            # not secure: print(&#34;account key:&#34;, storage_account_key)
             print(&#34;Getting service_client...&#34;)
             self.service_client = DataLakeServiceClient(account_url=dfs_url, credential=storage_account_key)
             print(&#34;Getting file_system_client...&#34;)
@@ -110,13 +127,27 @@ class ConnectionManagement:
                 file_system=self.settings.storage_container
             )
             print(&#34;Getting blob_service_client...&#34;)
-            connect_string=&#34;DefaultEndpointsProtocol=https;AccountName=&#34; + storage_account_name + &#34;AccountKey=&#34;\
+            connect_string=&#34;DefaultEndpointsProtocol=https;AccountName=&#34; + storage_account_name + &#34;;AccountKey=&#34;\
                            + storage_account_key + &#34;;EndpointSuffix=core.windows.net&#34;
             self.blob_service_client = BlobServiceClient.from_connection_string(
-                    conn_str=connect_string
-                ).get_container_client(container)
+                    conn_str=connect_string)
+            # Create sas token for blob
+
+            self.sas_token = generate_account_sas(
+                account_name=self.blob_service_client.account_name,
+                account_key=storage_account_key,
+                resource_types = ResourceTypes(service=True, object=True, container=True),
+                permission = AccountSasPermissions(read=True, write=True, delete=True, list=True, add=True, create=True),
+                start = datetime.now() - timedelta(hours=1),
+                expiry = datetime.utcnow() + timedelta(hours=4)  # Token valid for 4 hours
+            )
+            self.container_client = self.blob_service_client.get_container_client(container)
             print(&#34;returning references.&#34;)
-            return self.service_client, self.file_system_client, self.blob_service_client
+            return self.service_client\
+                , self.file_system_client\
+                , self.blob_service_client\
+                , self.container_client\
+                , self.sas_token
 
         except Exception as e:
             print(e)
@@ -139,7 +170,6 @@ class ConnectionManagement:
         blob_url=&#34;{}://{}.blob.core.windows.net/&#34;.format(&#34;https&#34;, storage_account_name)
         print(&#34;ADLS URL:&#34;, dfs_url)
         print(&#34;Blob URL:&#34;, blob_url)
-        # not secure: print(&#34;account key:&#34;, storage_account_key)
         print(&#34;Getting service_client...&#34;)
         self.service_client = DataLakeServiceClient(account_url=dfs_url, credential=storage_account_key)
         print(&#34;Getting file_system_client...&#34;)
@@ -147,13 +177,27 @@ class ConnectionManagement:
             file_system=self.settings.storage_container
         )
         print(&#34;Getting blob_service_client...&#34;)
-        connect_string=&#34;DefaultEndpointsProtocol=https;AccountName=&#34; + storage_account_name + &#34;AccountKey=&#34;\
+        connect_string=&#34;DefaultEndpointsProtocol=https;AccountName=&#34; + storage_account_name + &#34;;AccountKey=&#34;\
                        + storage_account_key + &#34;;EndpointSuffix=core.windows.net&#34;
         self.blob_service_client = BlobServiceClient.from_connection_string(
-                conn_str=connect_string
-            ).get_container_client(container)
+                conn_str=connect_string)
+        # Create sas token for blob
+
+        self.sas_token = generate_account_sas(
+            account_name=self.blob_service_client.account_name,
+            account_key=storage_account_key,
+            resource_types = ResourceTypes(service=True, object=True, container=True),
+            permission = AccountSasPermissions(read=True, write=True, delete=True, list=True, add=True, create=True),
+            start = datetime.now() - timedelta(hours=1),
+            expiry = datetime.utcnow() + timedelta(hours=4)  # Token valid for 4 hours
+        )
+        self.container_client = self.blob_service_client.get_container_client(container)
         print(&#34;returning references.&#34;)
-        return self.service_client, self.file_system_client, self.blob_service_client
+        return self.service_client\
+            , self.file_system_client\
+            , self.blob_service_client\
+            , self.container_client\
+            , self.sas_token
 
     except Exception as e:
         print(e)

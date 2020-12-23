@@ -14,7 +14,7 @@ class TestInterfaceFileManagement:
         assert result["code"] == "OK"
         mgmt.delete_directory(folder)
 
-    def test_check_files(self):
+    def notnow_test_check_files(self):
         self.handler = interface_file_handling.InterfaceFileHandling(
             configuration_file="tests/resources/connection_config.json")
         mgmt = folder_management.ADLSFolderManagement(configuration_file="tests/resources/connection_config.json")

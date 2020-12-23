@@ -37,7 +37,7 @@ class ADLSFolderManagement:
         self.settings = settings.GenericSettings(configuration_file=configuration_file)
         self.settings.get_config()
 
-        self.service_client, self.file_system_client, self.blob_service_client \
+        self.service_client, self.file_system_client, self.blob_service_client, self.container_client, self.sas_token \
             = connection.ConnectionManagement(self.settings).create_connection(
             storage_account_name=self.settings.storage_account_name
             , storage_account_key=self.settings.storage_account_key
@@ -87,7 +87,7 @@ class ADLSFolderManagement:
         self.settings = settings.GenericSettings(configuration_file=configuration_file)
         self.settings.get_config()
 
-        self.service_client, self.file_system_client, self.blob_service_client \
+        self.service_client, self.file_system_client, self.blob_service_client, self.container_client, self.sas_token \
             = connection.ConnectionManagement(self.settings).create_connection(
             storage_account_name=self.settings.storage_account_name
             , storage_account_key=self.settings.storage_account_key

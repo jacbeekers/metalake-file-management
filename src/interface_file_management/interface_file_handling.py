@@ -2,6 +2,10 @@ from datetime import datetime
 
 from src.adls_management import connection, messages
 from src.utils import settings
+import os
+from azure.core import exceptions
+from azure.storage.blob import BlobClient
+import time
 
 
 class InterfaceFileHandling:
@@ -12,12 +16,15 @@ class InterfaceFileHandling:
         self.settings = settings.GenericSettings(configuration_file=configuration_file)
         self.settings.get_config()
 
-        self.service_client, self.file_system_client, self.blob_service_client \
+        self.service_client, self.file_system_client, self.blob_service_client, self.container_client, self.sas_token \
             = connection.ConnectionManagement(self.settings).create_connection(
             storage_account_name=self.settings.storage_account_name
             , storage_account_key=self.settings.storage_account_key
             , container=self.settings.storage_container
         )
+        self.max_wait_in_sec = 60
+        self.recheck = 10
+        self.tgt = None
 
     def move_files(self, from_location, to_location, file_pattern):
         result = self.copy_files(from_location=from_location, to_location=to_location, file_pattern=file_pattern)
@@ -32,24 +39,84 @@ class InterfaceFileHandling:
         if sources is None:
             print("no files found in source >" + from_location + "<.")
             result = messages.message["ok"]
-            result["reference"] = "No files in source."
+            result["reference"] = "No files in source: " + from_location
             return result
 
         for file in sources:
-            src_file = from_location + "/" + file
-            src = self.blob_service_client.get_blob_client(src_file)
-            tgt_file = to_location + "/" + file
-            tgt = self.blob_service_client.get_blob_client(tgt_file)
-            tgt.start_copy_from_ulr(src.url, requires_sync=True)
-            copy_properties = tgt.get_blob_properties().copy
-            if copy_properties.status != "success":
-                tgt.abort_copy(copy_properties.id)
-                print(f"Unable to copy blob %s to %s. Status: %s" % (src_file, tgt_file, copy_properties.status))
-                result = messages.message["copy_files_failed"]
-                break
-            result = messages.message["ok"]
+            # TODO: Get a lease to prevent source file to be changed.
+            # https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy?tabs=python
+            src_file = file # os.path.basename(file)
+            tgt_file = to_location + "/" + os.path.basename(src_file)
+            src_blob = BlobClient(
+                # self.blob_service_client.url,
+                "https://jacstorage1234.blob.core.windows.net",
+                container_name=self.settings.storage_container,
+                blob_name=src_file,
+                credential=self.sas_token
+            )
+            print(f"Copying %s.%s to %s using url %s" % (self.settings.storage_container, src_file, tgt_file, src_blob.url))
+
+            #src_blob = self.blob_service_client.get_blob_client(container_name=self.settings.storage_container
+            #                                                    , blob_name=src_file
+            #                                                    , credential = self.sas_token)
+            self.tgt = self.blob_service_client.get_blob_client(self.settings.storage_container, tgt_file)
+
+            # download_file_path = os.path.join(".", str.replace("tryout", '.txt', 'DOWNLOAD.txt'))
+            # print("\nDownloading blob to \n\t" + download_file_path)
+            # with open(download_file_path, "wb") as download_file:
+            #    download_file.write(src_blob.download_blob().readall())
+
+            try:
+                action = self.tgt.start_copy_from_url(src_blob.url)
+                copy_id = action["copy_id"]
+                status = action["copy_status"]
+                error = action["error_code"]
+                self.wait_condition(condition=self.check_copy_status
+                                    , timeout=self.max_wait_in_sec
+                                    , granularity=self.recheck)
+
+                properties = self.tgt.get_blob_properties()
+                print("Total bytes: " + str(properties.size))
+                copy_props = properties.copy
+                if copy_props["status"] != "success":
+                    self.tgt.abort_copy(copy_id=copy_props["id"])
+                    print(f"Unable to copy blob %s to %s. Status: %s" % (src_file, tgt_file, copy_props.status))
+                    result = messages.message["copy_files_failed"]
+                    break
+
+                result = messages.message["ok"]
+            except exceptions.ResourceNotFoundError as e:
+                print("Azure reported a resource not found error: ", e)
+                result = messages.message["resource_not_found"]
+                result["reference"] = f"source: %s, targte: %s" % (src_file, tgt_file)
 
         return result
+
+    def wait_condition(self, condition, timeout=10.0, granularity=1.0, time_factory=time):
+        """
+        thankfully re-used from
+        https://stackoverflow.com/questions/45455898/polling-for-a-maximum-wait-time-unless-condition-in-python-2-7
+        """
+        end_time = time.time() + timeout  # compute the maximal end time
+        status = condition()  # first condition check, no need to wait if condition already True
+        while not status and time.time() < end_time:  # loop until the condition is false and timeout not exhausted
+            time.sleep(granularity)  # release CPU cycles
+            status = condition()  # check condition
+        return status
+
+    def check_copy_status(self):
+        properties = self.tgt.get_blob_properties()
+        copy_props = properties.copy
+        print("properties: ", copy_props)
+        # Display the copy status
+        print("Copy status: " + copy_props["status"])
+        # print("Copy progress: " + copy_props["progress"])
+        # print("Completion time: " + str(copy_props["completion_time"]))
+        if copy_props["status"] == "pending":
+            done = False
+        else:
+            done = True
+        return done
 
     def check_files(self, source_location, target_location, file_pattern):
         """
@@ -63,7 +130,7 @@ class InterfaceFileHandling:
                                   + "< and location >" + target_location \
                                   + "< have the same files."
         else:
-            result = messages.message["difference found"]
+            result = messages.message["check_files_difference_found"]
             result["reference"] = "location >" + source_location \
                                   + "< and location >" + target_location \
                                   + "< do NOT have the same files."
@@ -74,7 +141,7 @@ class InterfaceFileHandling:
         try:
             paths = self.file_system_client.get_paths(path=location)
             for path in paths:
-                files.append(path)
+                files.append(path.name)
             result = messages.message["ok"]
         except Exception as e:
             print(e)
