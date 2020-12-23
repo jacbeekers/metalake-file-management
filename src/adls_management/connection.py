@@ -22,15 +22,14 @@ class ConnectionManagement:
         try:
             dfs_url="{}://{}.dfs.core.windows.net".format("https", storage_account_name)
             blob_url="{}://{}.blob.core.windows.net/".format("https", storage_account_name)
-            print("ADLS URL:", dfs_url)
-            print("Blob URL:", blob_url)
-            print("Getting service_client...")
+            # print("ADLS URL:", dfs_url)
+            # print("Blob URL:", blob_url)
             self.service_client = DataLakeServiceClient(account_url=dfs_url, credential=storage_account_key)
-            print("Getting file_system_client...")
+            # print("Getting file_system_client...")
             self.file_system_client = self.service_client.get_file_system_client(
                 file_system=self.settings.storage_container
             )
-            print("Getting blob_service_client...")
+            # print("Getting blob_service_client...")
             connect_string="DefaultEndpointsProtocol=https;AccountName=" + storage_account_name + ";AccountKey="\
                            + storage_account_key + ";EndpointSuffix=core.windows.net"
             self.blob_service_client = BlobServiceClient.from_connection_string(
@@ -46,7 +45,7 @@ class ConnectionManagement:
                 expiry = datetime.utcnow() + timedelta(hours=4)  # Token valid for 4 hours
             )
             self.container_client = self.blob_service_client.get_container_client(container)
-            print("returning references.")
+            # print("returning references.")
             return self.service_client\
                 , self.file_system_client\
                 , self.blob_service_client\

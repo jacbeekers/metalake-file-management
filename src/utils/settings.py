@@ -1,5 +1,6 @@
-from src.utils import messages
 import json
+
+from src.utils import messages
 
 
 class GenericSettings:
@@ -64,20 +65,16 @@ class GenericSettings:
             print("azure secrets are unknown. Please set azure_secrets in the main config file.")
         else:
             azure_secrets_result = self.get_azure_secrets(self.azure_secrets)
-            if azure_secrets_result == messages.message["ok"]:
-                print("get_azure_secrets returned OK", module)
-            else:
-                print("get_azure_secrets returned: " + azure_secrets_result["code"], module)
+            if azure_secrets_result["code"] != "OK":
+                # print("get_azure_secrets returned: " + azure_secrets_result["code"], module)
                 return azure_secrets_result
 
         if self.file_locations is None:
             print("file locations are unknown. Please set file_locations in the main config file.")
         else:
             file_locations_result = self.get_file_locations(self.file_locations)
-            if file_locations_result == messages.message["ok"]:
-                print("get_file_locations returned OK", module)
-            else:
-                print("get_file_locations returned: " + file_locations_result["code"], module)
+            if file_locations_result["code"] != "OK":
+                # print("get_file_locations returned: " + file_locations_result["code"], module)
                 return file_locations_result
 
         return result
@@ -122,14 +119,11 @@ class GenericSettings:
                 data = json.load(azure)
                 result = self.determine_azure_secrets(data)
 
-                if result == messages.message["ok"]:
-                    print("Azure secrets file >" + self.azure_secrets + "< found and read."
-                          , module)
-                else:
-                    print("determine azure secrets returned: " + result["code"])
+                if result["code"] != "OK":
+                    print("ERROR: Determine azure secrets returned: " + result["code"])
                     return result
         except FileNotFoundError:
-            print("Cannot find provided azure_secrets file >" + self.azure_secrets + "<."
+            print("ERROR: Cannot find provided azure_secrets file >" + self.azure_secrets + "<."
                   , module)
             return messages.message["azure_secrets_not_found"]
 
@@ -140,10 +134,7 @@ class GenericSettings:
 
         if "meta_version" in data:
             main_meta_version = data["meta_version"][:3]
-            if main_meta_version == "0.1":
-                print("main_meta_version of azure secrets is >" + main_meta_version + "<."
-                      , module)
-            else:
+            if main_meta_version != "0.1":
                 print("Unsupported meta_version >" + data["meta_version"] + "<."
                       , module)
                 return messages.message["unsupported_meta_version_azure_secrets"]
@@ -154,22 +145,22 @@ class GenericSettings:
         self.storage_account_name = data["storage_account_name"]
         self.storage_account_key = data["storage_account_key"]
         self.storage_container = data["container"]
-        print("container: ", self.storage_container)
+        # print("container: ", self.storage_container)
         if "azure_http_proxy" in data:
             self.azure_http_proxy = data["azure_http_proxy"]
-            print("HTTP Proxy for Azure taken from azure secrets file: "
-                  + self.azure_http_proxy, module)
-        else:
-            print("No HTTP Proxy for Azure found in azure secrets file. "
-                  + "This is OK if no proxy is needed or has been set through the environment variable HTTP_PROXY"
-                  , module)
+        #    print("HTTP Proxy for Azure taken from azure secrets file: "
+        #          + self.azure_http_proxy, module)
+        # else:
+        #    print("No HTTP Proxy for Azure found in azure secrets file. "
+        #          + "This is OK if no proxy is needed or has been set through the environment variable HTTP_PROXY"
+        #          , module)
         if "azure_https_proxy" in data:
             self.azure_https_proxy = data["azure_https_proxy"]
-            print("HTTPS Proxy for Azure taken from azure secrets file: "
-                  + self.azure_https_proxy, module)
-        else:
-            print("No HTTPS Proxy for Azure found in azure secrets file. "
-                  + "This is OK if no proxy is needed or has been set through the environment variable HTTPS_PROXY"
-                  , module)
+        #    print("HTTPS Proxy for Azure taken from azure secrets file: "
+        #          + self.azure_https_proxy, module)
+        # else:
+        #    print("No HTTPS Proxy for Azure found in azure secrets file. "
+        #          + "This is OK if no proxy is needed or has been set through the environment variable HTTPS_PROXY"
+        #          , module)
 
         return messages.message["ok"]

@@ -4,7 +4,7 @@ from src.adls_management import connection
 from src.utils import settings, messages
 import os
 from azure.core import exceptions
-from azure.storage.blob import BlobClient
+from azure.storage.blob import BlobClient, BlobLeaseClient
 import time
 
 
@@ -43,7 +43,6 @@ class InterfaceFileHandling:
             return result
 
         for file in sources:
-            # TODO: Get a lease to prevent source file to be changed.
             # https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy?tabs=python
             src_file = file # os.path.basename(file)
             tgt_file = to_location + "/" + os.path.basename(src_file)
@@ -53,11 +52,14 @@ class InterfaceFileHandling:
                 blob_name=src_file,
                 credential=self.sas_token
             )
-            print(f"Copying %s.%s to %s using url %s" % (self.settings.storage_container, src_file, tgt_file, src_blob.url))
+            lease = BlobLeaseClient(src_blob)
+            lease.acquire()
+            source_props = src_blob.get_blob_properties()
+            print("Lease state for source file %s: %s" %(src_file ,source_props.lease.state))
 
-            #src_blob = self.blob_service_client.get_blob_client(container_name=self.settings.storage_container
-            #                                                    , blob_name=src_file
-            #                                                    , credential = self.sas_token)
+            print(f"Copying %s.%s to %s using url %s"
+                  % (self.settings.storage_container, src_file, tgt_file, src_blob.url))
+
             self.tgt = self.blob_service_client.get_blob_client(self.settings.storage_container, tgt_file)
 
             # download_file_path = os.path.join(".", str.replace("tryout", '.txt', 'DOWNLOAD.txt'))
@@ -82,6 +84,14 @@ class InterfaceFileHandling:
                     print(f"Unable to copy blob %s to %s. Status: %s" % (src_file, tgt_file, copy_props.status))
                     result = messages.message["copy_files_failed"]
                     break
+                    # Note: We do not release the lease in case of errors
+
+                if source_props.lease.state == "leased":
+                    # Break the lease on the source blob.
+                    lease.break_lease()
+                    # Update the source blob's properties to check the lease state.
+                    source_props = src_blob.get_blob_properties()
+                    print("Lease state: " + source_props.lease.state)
 
                 result = messages.message["ok"]
             except exceptions.ResourceNotFoundError as e:
