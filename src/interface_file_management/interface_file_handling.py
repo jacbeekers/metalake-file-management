@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from src.adls_management import connection, messages
-from src.utils import settings
+from src.adls_management import connection
+from src.utils import settings, messages
 import os
 from azure.core import exceptions
 from azure.storage.blob import BlobClient
@@ -48,8 +48,7 @@ class InterfaceFileHandling:
             src_file = file # os.path.basename(file)
             tgt_file = to_location + "/" + os.path.basename(src_file)
             src_blob = BlobClient(
-                # self.blob_service_client.url,
-                "https://jacstorage1234.blob.core.windows.net",
+                self.blob_service_client.url,
                 container_name=self.settings.storage_container,
                 blob_name=src_file,
                 credential=self.sas_token
@@ -154,5 +153,19 @@ class InterfaceFileHandling:
         return
 
     def remove_files(self, location, file_pattern):
-        result = messages.message["remove_files_failed"]
+        result, source_list = self.list_files(location=location, file_pattern=file_pattern)
+        if result["code"] == "OK":
+            for file in source_list:
+                try:
+                    src_blob = BlobClient(
+                        self.blob_service_client.url,
+                        container_name=self.settings.storage_container,
+                        blob_name=file,
+                        credential=self.sas_token
+                    )
+                    src_blob.delete_blob(delete_snapshots="include")
+                    print("blob removed:", file)
+                except Exception as e:
+                    print("Exception on blob removal:", e)
+                    result = messages.message["remove_files_failed"]
         return result

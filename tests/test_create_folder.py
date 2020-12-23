@@ -1,4 +1,3 @@
-import pytest
 from src.adls_management import folder_management
 
 

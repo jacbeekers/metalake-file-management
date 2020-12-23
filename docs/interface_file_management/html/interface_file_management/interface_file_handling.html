@@ -28,8 +28,8 @@
 </summary>
 <pre><code class="python">from datetime import datetime
 
-from src.adls_management import connection, messages
-from src.utils import settings
+from src.adls_management import connection
+from src.utils import settings, messages
 import os
 from azure.core import exceptions
 from azure.storage.blob import BlobClient
@@ -76,8 +76,7 @@ class InterfaceFileHandling:
             src_file = file # os.path.basename(file)
             tgt_file = to_location + &#34;/&#34; + os.path.basename(src_file)
             src_blob = BlobClient(
-                # self.blob_service_client.url,
-                &#34;https://jacstorage1234.blob.core.windows.net&#34;,
+                self.blob_service_client.url,
                 container_name=self.settings.storage_container,
                 blob_name=src_file,
                 credential=self.sas_token
@@ -182,7 +181,21 @@ class InterfaceFileHandling:
         return
 
     def remove_files(self, location, file_pattern):
-        result = messages.message[&#34;remove_files_failed&#34;]
+        result, source_list = self.list_files(location=location, file_pattern=file_pattern)
+        if result[&#34;code&#34;] == &#34;OK&#34;:
+            for file in source_list:
+                try:
+                    src_blob = BlobClient(
+                        self.blob_service_client.url,
+                        container_name=self.settings.storage_container,
+                        blob_name=file,
+                        credential=self.sas_token
+                    )
+                    src_blob.delete_blob(delete_snapshots=&#34;include&#34;)
+                    print(&#34;blob removed:&#34;, file)
+                except Exception as e:
+                    print(&#34;Exception on blob removal:&#34;, e)
+                    result = messages.message[&#34;remove_files_failed&#34;]
         return result</code></pre>
 </details>
 </section>
@@ -245,8 +258,7 @@ class InterfaceFileHandling:
             src_file = file # os.path.basename(file)
             tgt_file = to_location + &#34;/&#34; + os.path.basename(src_file)
             src_blob = BlobClient(
-                # self.blob_service_client.url,
-                &#34;https://jacstorage1234.blob.core.windows.net&#34;,
+                self.blob_service_client.url,
                 container_name=self.settings.storage_container,
                 blob_name=src_file,
                 credential=self.sas_token
@@ -351,7 +363,21 @@ class InterfaceFileHandling:
         return
 
     def remove_files(self, location, file_pattern):
-        result = messages.message[&#34;remove_files_failed&#34;]
+        result, source_list = self.list_files(location=location, file_pattern=file_pattern)
+        if result[&#34;code&#34;] == &#34;OK&#34;:
+            for file in source_list:
+                try:
+                    src_blob = BlobClient(
+                        self.blob_service_client.url,
+                        container_name=self.settings.storage_container,
+                        blob_name=file,
+                        credential=self.sas_token
+                    )
+                    src_blob.delete_blob(delete_snapshots=&#34;include&#34;)
+                    print(&#34;blob removed:&#34;, file)
+                except Exception as e:
+                    print(&#34;Exception on blob removal:&#34;, e)
+                    result = messages.message[&#34;remove_files_failed&#34;]
         return result</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -439,8 +465,7 @@ class InterfaceFileHandling:
         src_file = file # os.path.basename(file)
         tgt_file = to_location + &#34;/&#34; + os.path.basename(src_file)
         src_blob = BlobClient(
-            # self.blob_service_client.url,
-            &#34;https://jacstorage1234.blob.core.windows.net&#34;,
+            self.blob_service_client.url,
             container_name=self.settings.storage_container,
             blob_name=src_file,
             credential=self.sas_token
@@ -548,7 +573,21 @@ class InterfaceFileHandling:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def remove_files(self, location, file_pattern):
-    result = messages.message[&#34;remove_files_failed&#34;]
+    result, source_list = self.list_files(location=location, file_pattern=file_pattern)
+    if result[&#34;code&#34;] == &#34;OK&#34;:
+        for file in source_list:
+            try:
+                src_blob = BlobClient(
+                    self.blob_service_client.url,
+                    container_name=self.settings.storage_container,
+                    blob_name=file,
+                    credential=self.sas_token
+                )
+                src_blob.delete_blob(delete_snapshots=&#34;include&#34;)
+                print(&#34;blob removed:&#34;, file)
+            except Exception as e:
+                print(&#34;Exception on blob removal:&#34;, e)
+                result = messages.message[&#34;remove_files_failed&#34;]
     return result</code></pre>
 </details>
 </dd>

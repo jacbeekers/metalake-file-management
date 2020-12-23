@@ -7,6 +7,7 @@ from azure.storage.blob import BlobClient, BlobServiceClient, generate_account_s
 from azure.storage.blob import ResourceTypes, AccountSasPermissions
 from datetime import datetime, timedelta
 
+
 class ConnectionManagement:
 
     def __init__(self, settings):

@@ -1,4 +1,4 @@
-from src.adls_management import messages
+from src.utils import messages
 import json
 
 

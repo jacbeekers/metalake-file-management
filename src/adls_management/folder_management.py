@@ -1,5 +1,5 @@
-from src.adls_management import connection, messages
-from src.utils import settings
+from src.adls_management import connection
+from src.utils import settings, messages
 
 
 class ADLSFolderManagement:

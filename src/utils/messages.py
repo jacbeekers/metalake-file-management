@@ -54,7 +54,7 @@ message = {
         , "reference": "None"
     },
     #
-    # file handler messages
+    # file file_handler messages
     #
     "list_directory_error": {
         "code": "MLU-FH-001"
