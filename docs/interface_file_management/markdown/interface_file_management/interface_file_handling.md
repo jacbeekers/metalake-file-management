@@ -23,6 +23,9 @@ Classes
     `copy_files(self, from_location, to_location, file_pattern)`
     :
 
+    `download_file(self, location, filename)`
+    :
+
     `historize_files(self, source_location, file_pattern, recursive=True)`
     :
 
@@ -33,6 +36,9 @@ Classes
     :
 
     `remove_files(self, location, file_pattern)`
+    :
+
+    `upload_file(self, location, filename)`
     :
 
     `wait_condition(self, condition, timeout=10.0, granularity=1.0, time_factory=<module 'time' (built-in)>)`
