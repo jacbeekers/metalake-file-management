@@ -86,6 +86,30 @@ message = {
         , "level": "ERROR"
         , "reference": "None"
     },
+    "upload_failed": {
+        "code": "MLU-FH-006"
+        , "message": "File could not be uploaded"
+        , "level": "ERROR"
+        , "reference": "None"
+    },
+    "download_failed": {
+        "code": "MLU-FH-007"
+        , "message": "File could not be downloaded"
+        , "level": "ERROR"
+        , "reference": "None"
+    },
+    "could_not_determine_oldest_folder": {
+        "code": "MLU-FH-008"
+        , "message": "Could not determine the oldest (based on folder name) folder"
+        , "level": "ERROR"
+        , "reference": "None"
+    },
+    "no_files_in_source": {
+        "code": "MLU-FH-009"
+        , "message": "No files found in folder"
+        , "level": "WARNING"
+        , "reference": "None"
+    },
     #
     # Security related messages
     #

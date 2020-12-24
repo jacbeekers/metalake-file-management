@@ -6,6 +6,7 @@ import os
 from azure.core import exceptions
 from azure.storage.blob import BlobClient, BlobLeaseClient
 import time
+from src.adls_management import folder_management
 
 
 class InterfaceFileHandling:
@@ -22,6 +23,7 @@ class InterfaceFileHandling:
             , storage_account_key=self.settings.storage_account_key
             , container=self.settings.storage_container
         )
+        self.mgmt = folder_management.ADLSFolderManagement(configuration_file=configuration_file)
         self.max_wait_in_sec = 60
         self.recheck = 10
         self.tgt = None
@@ -30,12 +32,16 @@ class InterfaceFileHandling:
         result = self.copy_files(from_location=from_location, to_location=to_location, file_pattern=file_pattern)
         if result == messages.message["ok"]:
             result = self.remove_files(location=from_location, file_pattern=file_pattern)
+            if result["code"] == "OK":
+                if from_location != self.mgmt.settings.incoming:
+                    # don't remove the base incoming directory. This is the only directory that does not have subdirs
+                    result = self.mgmt.delete_directory(from_location)
 
         return result
 
     def copy_files(self, from_location, to_location, file_pattern):
         result = messages.message["copy_files_failed"]
-        result, sources = self.list_files(location=from_location, file_pattern=file_pattern)
+        result, sources, source_names = self.list_files(location=from_location, file_pattern=file_pattern)
         if sources is None:
             print("no files found in source >" + from_location + "<.")
             result = messages.message["ok"]
@@ -131,9 +137,9 @@ class InterfaceFileHandling:
         """
             source and target must have the same files (simple list comparison)
         """
-        result, source_list = self.list_files(location=source_location, file_pattern=file_pattern)
-        result, target_list = self.list_files(location=target_location, file_pattern=file_pattern)
-        if source_list == target_list:
+        result, source_list, source_names = self.list_files(location=source_location, file_pattern=file_pattern)
+        result, target_list, target_names = self.list_files(location=target_location, file_pattern=file_pattern)
+        if source_names == target_names:
             result = messages.message["ok"]
             result["reference"] = "location >" + source_location \
                                   + "< and location >" + target_location \
@@ -147,25 +153,27 @@ class InterfaceFileHandling:
 
     def list_files(self, location, file_pattern):
         files = []
+        file_names = []
         try:
             paths = self.file_system_client.get_paths(path=location)
             for path in paths:
                 files.append(path.name)
+                file_names.append(path.name.split('/')[1])
             result = messages.message["ok"]
         except Exception as e:
             print(e)
             result = messages.message["list_directory_error"]
-            result["reference"] = "directory: " + location
-            return result, None
-        return result, files
+            result["reference"] = "directory: " + location + " - " + str(e)
+            return result, None, None
+        return result, files, file_names
 
     def historize_files(self, source_location, file_pattern, recursive=True):
         return
 
     def remove_files(self, location, file_pattern):
-        result, source_list = self.list_files(location=location, file_pattern=file_pattern)
+        result, sources, source_names = self.list_files(location=location, file_pattern=file_pattern)
         if result["code"] == "OK":
-            for file in source_list:
+            for file in sources:
                 try:
                     src_blob = BlobClient(
                         self.blob_service_client.url,
@@ -179,3 +187,38 @@ class InterfaceFileHandling:
                     print("Exception on blob removal:", e)
                     result = messages.message["remove_files_failed"]
         return result
+
+    def upload_file(self, location, filename):
+        if '/' in filename:
+            tgt_filename = filename.split('/')[1]
+        else:
+            tgt_filename = filename
+
+        tgt_blob = BlobClient(
+            self.blob_service_client.url,
+            container_name=self.settings.storage_container,
+            blob_name=os.path.join(location, tgt_filename),
+            credential=self.sas_token
+        )
+
+        with open(filename, "rb") as data:
+            response = tgt_blob.upload_blob(data, overwrite=True)
+            print("upload result: ", response["error_code"])
+            if response["error_code"] is None:
+                return messages.message["ok"]
+            else:
+                return messages.message["upload_failed"]
+
+    def download_file(self, location, filename):
+
+        src_blob = BlobClient(
+            self.blob_service_client.url,
+            container_name=self.settings.storage_container,
+            blob_name=location + "/" + filename,
+            credential=self.sas_token
+        )
+        download_file_path = os.path.join(".", filename, 'DOWNLOADED.txt')
+        print("\nDownloading blob to \n\t" + download_file_path)
+        with open(download_file_path, "wb") as download_file:
+            download_file.write(src_blob.download_blob().readall())
+        return

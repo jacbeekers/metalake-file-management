@@ -4,6 +4,7 @@ from src.interface_file_management import interface_file_handling
 folder = "verification"
 source_folder = folder + "_source"
 target_folder = folder + "_target"
+dummy_file = "resources/dummy.txt"
 
 
 def verify_directory_creation(configuration_file="resources/connection_config.json", to_create=folder):
@@ -45,7 +46,7 @@ def verify_copy_files(configuration_file="resources/connection_config.json"):
     print("\ttarget_folder: " + target_folder)
     mgmt.create_directory(target_folder)
     print("3. upload a file")
-    print("\tnot implemented")
+    handler.upload_file(source_folder,dummy_file)
     print("4. copy the file(s)")
     result = handler.copy_files(from_location=source_folder, to_location=target_folder, file_pattern="*")
     print(result)

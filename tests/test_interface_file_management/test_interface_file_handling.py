@@ -1,5 +1,6 @@
 from src.interface_file_management import interface_file_handling
 from src.adls_management import folder_management
+import uuid
 
 
 class TestInterfaceFileManagement:
@@ -9,20 +10,20 @@ class TestInterfaceFileManagement:
         mgmt = folder_management.ADLSFolderManagement(configuration_file="tests/resources/connection_config.json")
         folder="test-list-files"
         mgmt.create_directory(folder)
-        result, files = handler.list_files(folder, "*")
+        result, files, filenames = handler.list_files(folder, "*")
         # assert files is not None
         assert result["code"] == "OK"
         mgmt.delete_directory(folder)
 
-    def notnow_test_check_files(self):
+    def test_check_files(self):
         self.handler = interface_file_handling.InterfaceFileHandling(
             configuration_file="tests/resources/connection_config.json")
         mgmt = folder_management.ADLSFolderManagement(configuration_file="tests/resources/connection_config.json")
-        source_folder="test-source"
+        source_folder=str(uuid.uuid4()) + "test-source"
         mgmt.create_directory(source_folder)
-        target_folder="test-target"
+        target_folder=str(uuid.uuid4()) + "test-target"
         mgmt.create_directory(target_folder)
-
+        # both will be empty, so equal
         result = self.handler.check_files(source_location=source_folder, target_location=target_folder, file_pattern="*")
         assert result["code"] == "OK"
         mgmt.delete_directory(source_folder)
