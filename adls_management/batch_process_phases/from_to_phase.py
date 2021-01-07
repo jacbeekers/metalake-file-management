@@ -43,7 +43,7 @@ class FilesBatchPhaseFromTo:
         oldest_name = "not_found"
         # introduce the year 3030 problem:
         oldest = 30301224093810129694
-        result, sources, source_names = self.file_handler.list_files(location=base_folder, file_pattern="*")
+        result, sources, source_names = self.file_handler.list_files(location=base_folder, file_pattern=".*json")
         # for folder in self.container_handler.walk_blobs(base_folder, delimiter='/'):
         for folder in source_names:
             # print(folder)
@@ -139,7 +139,7 @@ class FilesBatchPhaseFromTo:
             Move files from the configured from_location to the configured to_location (check locations.json)
         """
         print("--- from_to ---")
-        result, files, file_names = self.file_handler.list_files(location=from_location, file_pattern="*")
+        result, files, file_names = self.file_handler.list_files(location=from_location, file_pattern=".*json")
         if result["code"] == "OK":
             if len(files) > 0:
                 target_directory = self.determine_target_name(to_location)
@@ -157,5 +157,5 @@ class FilesBatchPhaseFromTo:
         print("free - from >%s< to >%s<" % (from_location, to_location))
         result = self.file_handler.move_files(from_location=from_location
                                                   , to_location=to_location
-                                                  , file_pattern="*")
+                                                  , file_pattern=".*json")
         return result
