@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from src.adls_management import connection
-from src.utils import settings, messages
+from metalake_management.adls_management import connection
+from metalake_management.utils import settings, messages
 import os
 from azure.core import exceptions
 from azure.storage.blob import BlobClient, BlobLeaseClient
 import time
-from src.adls_management import folder_management
+from metalake_management.adls_management import folder_management
 
 
 class InterfaceFileHandling:

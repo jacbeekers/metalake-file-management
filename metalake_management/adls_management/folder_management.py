@@ -1,5 +1,5 @@
-from src.adls_management import connection
-from src.utils import settings, messages
+from metalake_management.adls_management import connection
+from metalake_management.utils import settings, messages
 
 
 class ADLSFolderManagement:

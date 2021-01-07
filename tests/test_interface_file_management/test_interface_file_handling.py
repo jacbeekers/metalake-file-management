@@ -1,5 +1,5 @@
-from src.interface_file_management import interface_file_handling
-from src.adls_management import folder_management
+from metalake_management.interface_file_management import interface_file_handling
+from metalake_management.adls_management import folder_management
 import uuid
 
 

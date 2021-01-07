@@ -1,8 +1,8 @@
-from src.utils import messages
-from src.interface_file_management import interface_file_handling
+from metalake_management.utils import messages
+from metalake_management.interface_file_management import interface_file_handling
 from datetime import datetime, date
 from uuid import uuid4
-from src.adls_management import folder_management
+from metalake_management.adls_management import folder_management
 from os import path
 
 

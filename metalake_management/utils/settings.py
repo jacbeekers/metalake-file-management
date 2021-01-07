@@ -1,6 +1,6 @@
 import json
 
-from src.utils import messages
+from metalake_management.utils import messages
 
 
 class GenericSettings:

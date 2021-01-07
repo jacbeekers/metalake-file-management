@@ -1,4 +1,4 @@
-from src.adls_management import folder_management
+from metalake_management.adls_management import folder_management
 
 
 def test_create_folder():
