@@ -30,6 +30,7 @@ class GenericSettings:
         self.redo = None
         self.hist = None
         self.process_locations = False
+        self.download_location = "jsons"
 
     def get_config(self):
         """
@@ -55,6 +56,9 @@ class GenericSettings:
                         print("Incorrect config value >" + data["suppress_azure_call"]
                               + "< for suppress_azure_call. Must be True or False. Will default to False")
                         self.suppress_azure_call = False
+                if "download_location" in data:
+                    self.download_location = data["download_location"]
+
             result = messages.message["ok"]
 
         except FileNotFoundError:

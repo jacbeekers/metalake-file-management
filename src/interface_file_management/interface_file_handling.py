@@ -217,7 +217,7 @@ class InterfaceFileHandling:
             blob_name=location + "/" + filename,
             credential=self.sas_token
         )
-        download_file_path = os.path.join("downloads", filename)
+        download_file_path = os.path.join(self.settings.download_location, self.settings.busy, filename)
         print("\nDownloading blob to \n\t" + download_file_path)
         with open(download_file_path, "wb") as download_file:
             download_file.write(src_blob.download_blob().readall())
