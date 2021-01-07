@@ -2,7 +2,7 @@ import os, uuid, sys
 from azure.storage.filedatalake import DataLakeServiceClient
 from azure.core._match_conditions import MatchConditions
 from azure.storage.filedatalake._models import ContentSettings
-from metalake_management.utils import settings
+from adls_management.utils import settings
 from azure.storage.blob import BlobClient, BlobServiceClient, generate_account_sas
 from azure.storage.blob import ResourceTypes, AccountSasPermissions
 from datetime import datetime, timedelta

@@ -1,8 +1,8 @@
-from metalake_management.utils import messages
-from metalake_management.interface_file_management import interface_file_handling
+from adls_management.utils import messages
+from adls_management.interface_file_management import interface_file_handling
 from datetime import datetime, date
 from uuid import uuid4
-from metalake_management.adls_management import folder_management
+from adls_management.adls_management import folder_management
 from os import path
 
 
@@ -103,6 +103,14 @@ class FilesBatchPhaseFromTo:
 
     def from_busy2done(self):
         print("=== from busy2done ===")
+        from_folder = self.file_handler.settings.busy
+        print("from_folder is >%s<" % from_folder)
+        oldest, self.oldest_name = self.determine_oldest_folder(base_folder=from_folder)
+        print("oldest_folder is >%s<" % self.oldest_name)
+        if self.oldest_name == "not_found" or self.oldest_name == "" or self.oldest_name is None:
+            result = messages.message["could_not_determine_oldest_folder"]
+            return result
+
         from_folder = path.join(self.file_handler.settings.busy, self.oldest_name)
         to_folder = path.join(self.file_handler.settings.done, self.oldest_name)
         print("from >%s< to >%s<" % (from_folder, to_folder))

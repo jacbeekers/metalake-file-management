@@ -1,6 +1,6 @@
-from metalake_management.adls_management import folder_management
-from metalake_management.interface_file_management import interface_file_handling
-from metalake_management.batch_process_phases import from_to_phase
+from adls_management.adls_management import folder_management
+from adls_management.interface_file_management import interface_file_handling
+from adls_management.batch_process_phases import from_to_phase
 
 config_file = "resources/connection_config.json"
 dummy_file = "resources/dummy.txt"

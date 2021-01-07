@@ -1,6 +1,6 @@
 import json
 
-from metalake_management.utils import messages
+from adls_management.utils import messages
 
 
 class GenericSettings:

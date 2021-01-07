@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from metalake_management.adls_management import connection
-from metalake_management.utils import settings, messages
+from adls_management.adls_management import connection
+from adls_management.utils import settings, messages
 import os
 from azure.core import exceptions
 from azure.storage.blob import BlobClient, BlobLeaseClient
 import time
-from metalake_management.adls_management import folder_management
+from adls_management.adls_management import folder_management
+import re
 
 
 class InterfaceFileHandling:
@@ -154,11 +155,20 @@ class InterfaceFileHandling:
     def list_files(self, location, file_pattern):
         files = []
         file_names = []
+        if file_pattern is not None:
+            pattern = re.compile(file_pattern)
+        else:
+            pattern = None
         try:
             paths = self.file_system_client.get_paths(path=location)
             for path in paths:
-                files.append(path.name)
-                file_names.append(path.name.split('/')[1])
+                if pattern is None:
+                    files.append(path.name)
+                    file_names.append(path.name.split('/')[1])
+                else:
+                    if pattern.match(path.name) is not None:
+                        files.append(path.name)
+                        file_names.append(path.name.split('/')[1])
             result = messages.message["ok"]
         except Exception as e:
             print(e)
@@ -217,19 +227,25 @@ class InterfaceFileHandling:
             blob_name=location + "/" + filename,
             credential=self.sas_token
         )
-        download_file_path = os.path.join(self.settings.download_location, self.settings.busy, filename)
+
+        path_to_file = os.path.dirname(filename)
+        download_path_for_file = os.path.join(self.settings.download_location, path_to_file)
+        os.makedirs(download_path_for_file, exist_ok=True)
+        download_file_path = os.path.join(self.settings.download_location, filename)
         print("\nDownloading blob to \n\t" + download_file_path)
+
         with open(download_file_path, "wb") as download_file:
             download_file.write(src_blob.download_blob().readall())
         return
 
-    def download_files(self, location=None):
+    def download_files(self, location=None, pattern=".*.json"):
 
         if location is None:
             location = self.settings.busy
-        result, files, file_names = self.list_files(location=location, file_pattern="*.json")
+        result, files, file_names = self.list_files(location=location, file_pattern=pattern)
         if result["code"] == "OK":
             for file in files:
-                self.download_file(location=self.settings.busy, filename=file)
+                print("Downloading file >%s<" % file)
+                self.download_file(location=location, filename=file)
         else:
             print("An error occurred listing files", result)

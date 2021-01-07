@@ -32,7 +32,7 @@ with open(version_file, 'rb') as f:
                     t.write(out_line.encode('utf-8'))
 
 setuptools.setup(
-    name='metalake-file-management',
+    name='adls-management',
     version=new_version,
     author='Jac. Beekers',
     author_email='beekersjac@gmail.com',
