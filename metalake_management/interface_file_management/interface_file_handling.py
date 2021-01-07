@@ -222,3 +222,14 @@ class InterfaceFileHandling:
         with open(download_file_path, "wb") as download_file:
             download_file.write(src_blob.download_blob().readall())
         return
+
+    def download_files(self, location=None):
+
+        if location is None:
+            location = self.settings.busy
+        result, files, file_names = self.list_files(location=location, file_pattern="*.json")
+        if result["code"] == "OK":
+            for file in files:
+                self.download_file(location=self.settings.busy, filename=file)
+        else:
+            print("An error occurred listing files", result)
