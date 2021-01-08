@@ -219,12 +219,12 @@ class InterfaceFileHandling:
             else:
                 return messages.message["upload_failed"]
 
-    def download_file(self, location, filename):
+    def download_file(self, filename):
 
         src_blob = BlobClient(
             self.blob_service_client.url,
             container_name=self.settings.storage_container,
-            blob_name=location + "/" + filename,
+            blob_name=filename,
             credential=self.sas_token
         )
 
@@ -245,7 +245,7 @@ class InterfaceFileHandling:
         result, files, file_names = self.list_files(location=location, file_pattern=pattern)
         if result["code"] == "OK":
             for file in files:
-                print("Downloading file >%s<" % file)
-                self.download_file(location=location, filename=file)
+                print("Downloading file >%s< from location >%s<" % (file, location))
+                self.download_file(filename=file)
         else:
             print("An error occurred listing files", result)
